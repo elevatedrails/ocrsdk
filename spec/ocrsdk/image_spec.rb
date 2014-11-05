@@ -15,7 +15,7 @@ describe OCRSDK::Image do
 
   describe ".as_languages_and_formats" do
     it "should call api and return Promise" do
-      subject.as_languages_and_formats([:russian],[:txt, :xml]).should be_kind_of(OCRSDK::Promise)
+      subject.as_languages_and_formats([:russian],[:txt, :xml], :text_extraction).should be_kind_of(OCRSDK::Promise)
     end
   end
 
@@ -35,6 +35,10 @@ describe OCRSDK::Image do
     it "should call api and return Promise" do
       subject.as_xml([:russian]).should be_kind_of(OCRSDK::Promise)
     end
+
+    it "should pass :barcode_recognition profile and return Promise" do
+      subject.as_xml([:russian], :barcode_recognition).should be_kind_of(OCRSDK::Promise)
+    end
   end
 
   describe ".as_xml_sync" do
@@ -42,8 +46,6 @@ describe OCRSDK::Image do
       subject.as_xml_sync([:russian], 0).should == 'meow'
     end
   end
-
-
 
   describe ".as_pdf" do
     it "should call api and return Promise" do

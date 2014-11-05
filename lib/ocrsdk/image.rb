@@ -8,25 +8,25 @@ class OCRSDK::Image < OCRSDK::AbstractEntity
     @image_path = image_path
   end
 
-  def as_languages_and_formats(languages, formats, options={})
-    xml_string = api_process_image @image_path, languages, formats, :text_extraction,options
+  def as_languages_and_formats(languages, formats, profile, options={})
+    xml_string = api_process_image @image_path, languages, formats, profile,options
     OCRSDK::Promise.from_response xml_string
   end
 
-  def as_text(languages)
-    as_languages_and_formats(languages, :txt)
+  def as_text(languages, profile=:text_extraction)
+    as_languages_and_formats(languages, :txt, profile)
   end
 
   def as_text_sync(languages, wait_interval=OCRSDK.config.default_poll_time)
     as_text(languages).wait(wait_interval).result.force_encoding('utf-8')
   end
 
-  def as_xml(languages)
-    as_languages_and_formats(languages, :xml)
+  def as_xml(languages, profile=:text_extraction)
+    as_languages_and_formats(languages, :xml, profile)
   end
 
-  def as_xml_sync(languages, wait_interval=OCRSDK.config.default_poll_time)
-    as_xml(languages).wait(wait_interval).result.force_encoding('utf-8')
+  def as_xml_sync(languages, wait_interval=OCRSDK.config.default_poll_time, profile=:text_extraction)
+    as_xml(languages, profile).wait(wait_interval).result.force_encoding('utf-8')
   end
 
   def as_pdf(languages)
