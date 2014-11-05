@@ -8,10 +8,13 @@ class OCRSDK::Image < OCRSDK::AbstractEntity
     @image_path = image_path
   end
 
-  def as_text(languages)
-    xml_string = api_process_image @image_path, languages, :txt, :text_extraction
-
+  def as_languages_and_formats(languages, formats, options={})
+    xml_string = api_process_image @image_path, languages, formats, :text_extraction,options
     OCRSDK::Promise.from_response xml_string
+  end
+
+  def as_text(languages)
+    as_languages_and_formats(languages, :txt)
   end
 
   def as_text_sync(languages, wait_interval=OCRSDK.config.default_poll_time)
@@ -19,15 +22,12 @@ class OCRSDK::Image < OCRSDK::AbstractEntity
   end
 
   def as_xml(languages)
-    xml_string = api_process_image @image_path, languages, :xml, :text_extraction
-
-    OCRSDK::Promise.from_response xml_string
+    as_languages_and_formats(languages, :xml)
   end
 
   def as_xml_sync(languages, wait_interval=OCRSDK.config.default_poll_time)
     as_xml(languages).wait(wait_interval).result.force_encoding('utf-8')
   end
-
 
   def as_pdf(languages)
     xml_string = api_process_image @image_path, languages, :pdf_text_and_images, :document_conversion
@@ -49,15 +49,15 @@ private
 
   # TODO handle 4xx and 5xx responses and errors, file not found error
   # http://ocrsdk.com/documentation/apireference/processImage/
-  def api_process_image(image_path, languages, format=:txt, profile=:document_conversion)
+  def api_process_image(image_path, languages, format=:txt, profile=:document_conversion, options={})
     raise OCRSDK::UnsupportedInputFormat   unless supported_input_format? File.extname(image_path)[1..-1]
     raise OCRSDK::UnsupportedOutputFormat  unless supported_output_format? format
     raise OCRSDK::UnsupportedProfile       unless supported_profile? (profile)
 
-    params = URI.encode_www_form(
+    params = URI.encode_www_form({
               language: languages_to_s(languages).join(','),
               exportFormat: format_to_s(format), 
-              profile: profile_to_s(profile))
+              profile: profile_to_s(profile)}.merge(options))
     uri = URI.join @url, '/processImage', "?#{params}"
 
     retryable tries: OCRSDK.config.number_or_retries, on: OCRSDK::NetworkError, sleep: OCRSDK.config.retry_wait_time do
