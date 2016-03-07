@@ -62,9 +62,10 @@ private
 
     retryable tries: OCRSDK.config.number_or_retries, on: OCRSDK::NetworkError, sleep: OCRSDK.config.retry_wait_time do
       begin
-        RestClient.post uri.to_s, upload: { file: File.new(image_path, 'rb') }
-      rescue RestClient::ExceptionWithResponse
-        raise OCRSDK::NetworkError
+	RestClient::Request.execute(method: :post, url:  uri.to_s, payload: {upload: { file: File.new(image_path, 'rb')}},
+          timeout: 120000, open_timeout: 120000, headers: {})
+      rescue RestClient::ExceptionWithResponse => e
+        raise OCRSDK::NetworkError.new(":#{e.message}:#{e.response}:#{e.http_body}:#{e.http_code}")
       end
     end
   end
